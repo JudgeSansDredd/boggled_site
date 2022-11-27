@@ -5,7 +5,7 @@ import MainLayout from "../Layouts/MainLayout";
 export default function Home() {
     return (
         <MainLayout pageName="Home">
-            <div className="flex justify-center">
+            <div className="flex justify-center mt-4">
                 <BoggleBoard boardLayout="abcdefghijklmnopqrstuvwxy" />
             </div>
         </MainLayout>

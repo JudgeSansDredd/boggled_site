@@ -9,9 +9,9 @@ export default function BoggleDie(props: PropType) {
     const bgColor = props.highlighted ? "bg-green-600" : "bg-white";
     return (
         <div
-            className={`flex items-center justify-center w-8 h-8 ${bgColor} border-2 border-black rounded-md`}
+            className={`flex items-center justify-center w-16 h-16 ${bgColor} border-2 border-black rounded-md`}
         >
-            <div className="text-red-800">{props.letter}</div>
+            <div className="text-2xl text-red-800 ">{props.letter}</div>
         </div>
     );
 }
