@@ -1,7 +1,12 @@
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, {
+    ChangeEvent,
+    KeyboardEventHandler,
+    useEffect,
+    useState,
+} from "react";
 import BoggleBoard from "../Components/BoggleBoard";
 import MainLayout from "../Layouts/MainLayout";
-import { findWord, getBoardLayout } from "../Utils/utils";
+import { findWord, getBoardLayout, lookupWord } from "../Utils/utils";
 
 export default function Home() {
     const [boardLayout, setBoardLayout] = useState<string[]>([
@@ -9,13 +14,32 @@ export default function Home() {
     ]);
     const [inputValue, setInputValue] = useState<string>("");
     const [highlightPath, setHighlightPath] = useState<number[]>([]);
+    const [lookupStatus, setLookupStatus] = useState<{
+        working: Boolean;
+        definitionString: string;
+    }>({ working: false, definitionString: "" });
 
     const shuffleHandler = () => {
         setBoardLayout(getBoardLayout());
+        setInputValue("");
+        setLookupStatus({ working: false, definitionString: "" });
     };
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
         setInputValue(e.currentTarget.value.toUpperCase());
+    };
+
+    const handleInputKeyDown: KeyboardEventHandler<HTMLInputElement> = async ({
+        key,
+    }) => {
+        if (key === "Enter") {
+            setLookupStatus((prev) => ({ ...prev, working: true }));
+            const result = await lookupWord(inputValue);
+            setLookupStatus({ working: false, definitionString: result });
+        } else if (key === "Escape") {
+            setInputValue("");
+            setLookupStatus({ working: false, definitionString: "" });
+        }
     };
 
     useEffect(() => {
@@ -49,8 +73,12 @@ export default function Home() {
                         id="lookup"
                         value={inputValue}
                         onChange={handleInputChange}
+                        onKeyDown={handleInputKeyDown}
                     />
                 </div>
+                {!lookupStatus.working && (
+                    <div>{lookupStatus.definitionString}</div>
+                )}
             </div>
         </MainLayout>
     );

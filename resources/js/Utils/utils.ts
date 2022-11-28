@@ -1,3 +1,5 @@
+import axios from "axios";
+
 const DICE = [
     "RUGRWO",
     "TITEII",
@@ -49,15 +51,14 @@ export function findWord(
     path: RowColType[]
 ): number[] | false {
     if (!word.length) {
-        console.log("No word provided");
         return false;
     }
     if (!path.length) {
         // We're just starting!
+        const DQdWord = word.replace("QU", "Q");
         for (let row = 0; row < 5; row++) {
             for (let col = 0; col < 5; col++) {
-                console.log(`Searching row: ${row}, col: ${col}`);
-                const result = findWord(word, boardLayout, [{ row, col }]);
+                const result = findWord(DQdWord, boardLayout, [{ row, col }]);
                 if (result) {
                     return result;
                 }
@@ -71,9 +72,6 @@ export function findWord(
         // Make an abbreviated word out of the needle, but x characters long (based on length of path)
         const wordAbbrev = word.substring(0, pathWord.length);
 
-        console.log(`pathWord: ${pathWord}`);
-        console.log(`wordAbbrev: ${wordAbbrev}`);
-
         // These do not match, return up the stack
         if (pathWord !== wordAbbrev) {
             return false;
@@ -81,7 +79,6 @@ export function findWord(
         // They match, is it an entire match?
         if (pathWord === word) {
             const numPath = path.map((p) => rowColToNum(p));
-            console.log(numPath);
             return numPath;
         }
         // They match, but it isn't the entire word yet. Search l, r, u, d
@@ -132,4 +129,59 @@ export function findWord(
         }
     }
     return false;
+}
+
+interface DefinitionType {
+    meta: {
+        id: string;
+        uuid: string;
+        sort: string;
+        src: string;
+        section: string;
+        stems: string[];
+        offensive: boolean;
+    };
+    hom: number;
+    hwi: {
+        hw: string;
+        prs: {
+            mw: string;
+            sound: {
+                audio: string;
+                ref: string;
+                stat: string;
+            };
+        }[];
+    };
+    fl: string;
+    date: string;
+    shortdef: string[];
+}
+
+export async function lookupWord(word: string): Promise<string> {
+    // HACK: Remove X-Requested-With header before call, it's added by inertia but borks CORS here
+    delete axios.defaults.headers.common["X-Requested-With"];
+    const res = await axios.get(
+        `https://dictionaryapi.com/api/v3/references/collegiate/json/${word}`,
+        {
+            params: { key: import.meta.env.VITE_DICTIONARY_API_KEY },
+        }
+    );
+    const data = res.data as DefinitionType[] | string[];
+    if (data.length) {
+        if (typeof data[0] === "object") {
+            const castData = data as DefinitionType[];
+            return castData
+                .map((d) => d.shortdef)
+                .flat()
+                .map((d, i) => `${i + 1}) ${d}`)
+                .join(" ");
+        } else {
+            const castData = data as string[];
+            const alternates = castData.join(", ");
+            return `Did you mean?: ${alternates}`;
+        }
+    } else {
+        return "";
+    }
 }
