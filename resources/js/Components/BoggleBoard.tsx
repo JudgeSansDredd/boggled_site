@@ -2,14 +2,18 @@ import React from "react";
 import BoggleDie from "./BoggleDie";
 
 interface PropType {
-    boardLayout: string;
+    boardLayout: string[];
+    highlightPath: number[];
 }
 
 export default function Boggleboard(props: PropType) {
-    const boardArray = [...props.boardLayout];
-    const dice = boardArray.map((d, i) => {
+    const dice = props.boardLayout.map((d, i) => {
         return (
-            <BoggleDie letter={d} key={`boggle-die-${i}`} highlighted={false} />
+            <BoggleDie
+                letter={d}
+                key={`boggle-die-${i}`}
+                highlighted={props.highlightPath.includes(i)}
+            />
         );
     });
 
