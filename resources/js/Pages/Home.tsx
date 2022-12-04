@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import React, {
     ChangeEvent,
     KeyboardEventHandler,
@@ -5,6 +6,7 @@ import React, {
     useState,
 } from "react";
 import BoggleBoard from "../Components/BoggleBoard";
+import Timer from "../Components/Timer";
 import MainLayout from "../Layouts/MainLayout";
 import { findWord, getBoardLayout, lookupWord } from "../Utils/utils";
 
@@ -18,11 +20,13 @@ export default function Home() {
         working: Boolean;
         definitionString: string;
     }>({ working: false, definitionString: "" });
+    const [roundEndsAt, setRoundEndsAt] = useState<Date | null>(null);
 
     const shuffleHandler = () => {
         setBoardLayout(getBoardLayout());
         setInputValue("");
         setLookupStatus({ working: false, definitionString: "" });
+        setRoundEndsAt(DateTime.now().plus({ minutes: 3 }).toJSDate());
     };
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -54,6 +58,8 @@ export default function Home() {
     return (
         <MainLayout pageName="Home">
             <div className="flex flex-col items-center gap-4 mt-4">
+                <div className="text-2xl text-blue-700">Boggled</div>
+                <Timer roundEndsAt={roundEndsAt} />
                 <BoggleBoard
                     boardLayout={boardLayout}
                     highlightPath={highlightPath}
