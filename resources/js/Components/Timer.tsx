@@ -6,7 +6,7 @@ interface PropType {
 }
 
 export default function Timer(props: PropType) {
-    const DEFAULT_TIMER_STRING = "This is a timer placeholder";
+    const DEFAULT_TIMER_STRING = "Shuffle the board to start";
     const { roundEndsAt } = props;
     const [timerString, setTimerString] =
         useState<string>(DEFAULT_TIMER_STRING);
