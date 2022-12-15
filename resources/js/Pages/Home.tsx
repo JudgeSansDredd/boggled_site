@@ -17,7 +17,7 @@ export default function Home() {
     const [inputValue, setInputValue] = useState<string>("");
     const [highlightPath, setHighlightPath] = useState<number[]>([]);
     const [lookupStatus, setLookupStatus] = useState<{
-        working: Boolean;
+        working: boolean;
         definitionString: string;
     }>({ working: false, definitionString: "" });
     const [roundEndsAt, setRoundEndsAt] = useState<Date | null>(null);
