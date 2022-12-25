@@ -83,7 +83,9 @@ export default function Home() {
                     />
                 </div>
                 {!lookupStatus.working && (
-                    <div>{lookupStatus.definitionString}</div>
+                    <div className="p-2 mx-4">
+                        {lookupStatus.definitionString}
+                    </div>
                 )}
             </div>
         </MainLayout>
