@@ -11,7 +11,7 @@ export default function BoggleDie(props: PropType) {
         <div
             className={`flex items-center justify-center w-16 h-16 ${bgColor} border-2 border-black rounded-md`}
         >
-            <div className="text-2xl text-red-800 ">
+            <div className="text-2xl text-black ">
                 {props.letter}
                 <span className="text-sm">
                     {props.letter === "Q" ? "u" : ""}
