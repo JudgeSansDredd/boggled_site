@@ -32,6 +32,7 @@ export default function Home() {
     const [showValidWords, setShowValidWords] = useState<boolean>(false);
 
     const shuffleHandler = () => {
+        setShowValidWords(false);
         setInputValue("");
         setValidWords(null);
         const newLayout = getBoardLayout();
