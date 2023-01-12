@@ -7,8 +7,15 @@ import React, {
 } from "react";
 import BoggleBoard from "../Components/BoggleBoard";
 import Timer from "../Components/Timer";
+import ValidWord from "../Components/ValidWord";
 import MainLayout from "../Layouts/MainLayout";
-import { findWord, getBoardLayout, lookupWord } from "../Utils/utils";
+import {
+    findValidWords,
+    findWord,
+    getBoardLayout,
+    lookupWord,
+    WordPathType,
+} from "../Utils/utils";
 
 export default function Home() {
     const [boardLayout, setBoardLayout] = useState<string[]>([
@@ -21,12 +28,32 @@ export default function Home() {
         definitionString: string;
     }>({ working: false, definitionString: "" });
     const [roundEndsAt, setRoundEndsAt] = useState<Date | null>(null);
+    const [validWords, setValidWords] = useState<WordPathType[] | null>(null);
+    const [showValidWords, setShowValidWords] = useState<boolean>(false);
 
     const shuffleHandler = () => {
-        setBoardLayout(getBoardLayout());
         setInputValue("");
+        setValidWords(null);
+        const newLayout = getBoardLayout();
+        setBoardLayout(newLayout);
         setLookupStatus({ working: false, definitionString: "" });
         setRoundEndsAt(DateTime.now().plus({ minutes: 3 }).toJSDate());
+        setValidWords(findValidWords(newLayout));
+    };
+
+    const showValidWordsClickHandler = () => {
+        setShowValidWords(!showValidWords);
+    };
+
+    const validWordMouseOverHandler = (word: string) => {
+        setInputValue(word);
+    };
+
+    const validWordMouseClickHandler = async (word: string) => {
+        setInputValue(word);
+        setLookupStatus((prev) => ({ ...prev, working: true }));
+        const result = await lookupWord(word);
+        setLookupStatus({ working: false, definitionString: result });
     };
 
     const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -85,6 +112,25 @@ export default function Home() {
                 {!lookupStatus.working && (
                     <div className="p-2 mx-4">
                         {lookupStatus.definitionString}
+                    </div>
+                )}
+                <button
+                    className="p-2 bg-blue-300 rounded-full hover:bg-blue-400"
+                    onClick={showValidWordsClickHandler}
+                >{`${showValidWords ? "Hide" : "Show"} Valid Words`}</button>
+                {showValidWords && validWords && (
+                    <div className="flex flex-wrap gap-4">
+                        {validWords.map((validWord) => (
+                            <ValidWord
+                                key={validWord.word}
+                                wordPath={validWord}
+                                mouseClickCallback={validWordMouseClickHandler}
+                                mouseOverCallback={validWordMouseOverHandler}
+                                active={
+                                    inputValue.toUpperCase() === validWord.word
+                                }
+                            />
+                        ))}
                     </div>
                 )}
             </div>

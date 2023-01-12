@@ -1,4 +1,5 @@
 import axios from "axios";
+import { dictionary } from "./dictionary_filtered";
 
 const DICE = [
     "RUGRWO",
@@ -28,7 +29,7 @@ const DICE = [
     "CIIETL",
 ];
 
-export function getBoardLayout() {
+export function getBoardLayout(): string[] {
     const shuffled = DICE.map((d) => ({ sort: Math.random(), value: d })) // Addd sort key
         .sort((a, b) => a.sort - b.sort) // Sort by key
         .map((d) => d.value) // Remove sort key
@@ -41,8 +42,26 @@ interface RowColType {
     col: number;
 }
 
+export interface WordPathType {
+    word: string;
+    path: number[];
+}
+
 function rowColToNum({ row, col }: RowColType): number {
     return row * 5 + col;
+}
+
+export function findValidWords(boardLayout: string[]): WordPathType[] {
+    return dictionary
+        .map((word) => {
+            const path = findWord(word, boardLayout, []);
+            return { word, path };
+        })
+        .filter((fr) => fr.path !== false)
+        .sort((a, b) => b.word.length - a.word.length) as {
+        word: string;
+        path: number[];
+    }[];
 }
 
 export function findWord(
