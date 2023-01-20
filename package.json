@@ -4,7 +4,8 @@
         "dev": "vite",
         "build": "vite build",
         "format": "npx prettier --write .",
-        "lint": "npx tslint -c tslint.json **/*.ts*"
+        "lint": "npx tslint -c tslint.json **/*.ts*",
+        "prepare": "git config core.hooksPath ./.githooks"
     },
     "devDependencies": {
         "@headlessui/react": "^1.4.2",
