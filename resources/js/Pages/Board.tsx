@@ -84,7 +84,7 @@ export default function Home() {
     }, [boardLayout, inputValue]);
 
     return (
-        <MainLayout pageName="Home">
+        <MainLayout pageName="Board">
             <div className="flex flex-col items-center gap-4 mt-4">
                 <div className="text-2xl text-blue-700">Boggled</div>
                 <Timer roundEndsAt={roundEndsAt} />
