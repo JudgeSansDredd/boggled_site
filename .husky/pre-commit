@@ -1,5 +1,0 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-npx tslint -c tslint.json "**/*.ts*"
-npx pretty-quick --staged
