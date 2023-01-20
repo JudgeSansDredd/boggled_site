@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
 npx tslint -c tslint.json **/*.ts*
-pretty-quick --staged
+npx pretty-quick --staged
