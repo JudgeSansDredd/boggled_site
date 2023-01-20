@@ -3,9 +3,7 @@ import Button from "../Components/Button";
 import MainLayout from "../Layouts/MainLayout";
 
 export default function Login() {
-    const SubmitButtonHandler: MouseEventHandler<HTMLButtonElement> = (e) => {
-        console.log("Submit clicked");
-    };
+    const SubmitButtonHandler: MouseEventHandler<HTMLButtonElement> = (e) => {};
 
     return (
         <MainLayout pageName="Login">
