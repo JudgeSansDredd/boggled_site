@@ -1,6 +1,6 @@
 import { DateTime } from "luxon";
 import React, {
-    ChangeEvent,
+    ChangeEventHandler,
     KeyboardEventHandler,
     useEffect,
     useState,
@@ -10,6 +10,8 @@ import Timer from "../Components/Timer";
 import ValidWord from "../Components/ValidWord";
 import MainLayout from "../Layouts/MainLayout";
 import {
+    BoardSizeType,
+    BOARD_SIZES,
     findValidWords,
     findWord,
     getBoardLayout,
@@ -21,7 +23,7 @@ export default function Home() {
     const [boardLayout, setBoardLayout] = useState<string[]>([
         ..."abcdefghijklmnopqrstuvwxy".toUpperCase(),
     ]);
-    const [inputValue, setInputValue] = useState<string>("");
+    const [lookupInputValue, setLookupInputValue] = useState<string>("");
     const [highlightPath, setHighlightPath] = useState<number[]>([]);
     const [lookupStatus, setLookupStatus] = useState<{
         working: boolean;
@@ -30,16 +32,17 @@ export default function Home() {
     const [roundEndsAt, setRoundEndsAt] = useState<Date | null>(null);
     const [validWords, setValidWords] = useState<WordPathType[] | null>(null);
     const [showValidWords, setShowValidWords] = useState<boolean>(false);
+    const [boardSize, setBoardSize] = useState<BoardSizeType>("big");
 
     const shuffleHandler = () => {
         setShowValidWords(false);
-        setInputValue("");
+        setLookupInputValue("");
         setValidWords(null);
-        const newLayout = getBoardLayout();
+        const newLayout = getBoardLayout(boardSize);
         setBoardLayout(newLayout);
         setLookupStatus({ working: false, definitionString: "" });
         setRoundEndsAt(DateTime.now().plus({ minutes: 3 }).toJSDate());
-        setValidWords(findValidWords(newLayout));
+        setValidWords(findValidWords(newLayout, boardSize));
     };
 
     const showValidWordsClickHandler = () => {
@@ -47,18 +50,24 @@ export default function Home() {
     };
 
     const validWordMouseOverHandler = (word: string) => {
-        setInputValue(word);
+        setLookupInputValue(word);
     };
 
     const validWordMouseClickHandler = async (word: string) => {
-        setInputValue(word);
+        setLookupInputValue(word);
         setLookupStatus((prev) => ({ ...prev, working: true }));
         const result = await lookupWord(word);
         setLookupStatus({ working: false, definitionString: result });
     };
 
-    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setInputValue(e.currentTarget.value.toUpperCase());
+    const handleInputChange: ChangeEventHandler<HTMLInputElement> = (e) => {
+        setLookupInputValue(e.currentTarget.value.toUpperCase());
+    };
+
+    const handleBoardSizeChange: ChangeEventHandler<HTMLSelectElement> = (
+        e
+    ) => {
+        setBoardSize(e.currentTarget.value as BoardSizeType);
     };
 
     const handleInputKeyDown: KeyboardEventHandler<HTMLInputElement> = async ({
@@ -66,31 +75,40 @@ export default function Home() {
     }) => {
         if (key === "Enter") {
             setLookupStatus((prev) => ({ ...prev, working: true }));
-            const result = await lookupWord(inputValue);
+            const result = await lookupWord(lookupInputValue);
             setLookupStatus({ working: false, definitionString: result });
         } else if (key === "Escape") {
-            setInputValue("");
+            setLookupInputValue("");
             setLookupStatus({ working: false, definitionString: "" });
         }
     };
 
     useEffect(() => {
-        const result = findWord(inputValue, boardLayout, []);
+        const result = findWord(lookupInputValue, boardLayout, []);
         if (result) {
             setHighlightPath(result);
         } else {
             setHighlightPath([]);
         }
-    }, [boardLayout, inputValue]);
+    }, [boardLayout, lookupInputValue]);
 
     return (
         <MainLayout pageName="Board">
             <div className="flex flex-col items-center gap-4 mt-4">
                 <div className="text-2xl text-blue-700">Boggled</div>
+                <select onChange={handleBoardSizeChange}>
+                    <option value="big">
+                        {BOARD_SIZES["big"]} x {BOARD_SIZES["big"]}
+                    </option>
+                    <option value="superbig">
+                        {BOARD_SIZES["superbig"]} x {BOARD_SIZES["superbig"]}
+                    </option>
+                </select>
                 <Timer roundEndsAt={roundEndsAt} />
                 <BoggleBoard
                     boardLayout={boardLayout}
                     highlightPath={highlightPath}
+                    boardSize={boardSize}
                 />
                 <button
                     className="p-2 bg-blue-300 rounded-full hover:bg-blue-400"
@@ -105,7 +123,7 @@ export default function Home() {
                         type="text"
                         name="lookup"
                         id="lookup"
-                        value={inputValue}
+                        value={lookupInputValue}
                         onChange={handleInputChange}
                         onKeyDown={handleInputKeyDown}
                     />
@@ -128,7 +146,8 @@ export default function Home() {
                                 mouseClickCallback={validWordMouseClickHandler}
                                 mouseOverCallback={validWordMouseOverHandler}
                                 active={
-                                    inputValue.toUpperCase() === validWord.word
+                                    lookupInputValue.toUpperCase() ===
+                                    validWord.word
                                 }
                             />
                         ))}

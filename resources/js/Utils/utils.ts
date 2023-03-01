@@ -1,40 +1,94 @@
 import axios from "axios";
 import { dictionary } from "./dictionary_filtered";
 
-const DICE = [
-    "RUGRWO",
-    "TITEII",
-    "USENSS",
-    "ONWUOT",
-    "IYPRRR",
-    "PSIRFY",
-    "HLRHDO",
-    "OUOTTO",
-    "HDDNTO",
-    "AEAEEE",
-    "FAIASR",
-    "NNENDA",
-    "KQXZBJ",
-    "FAYISR",
-    "ENGNMA",
-    "ARASAF",
-    "MEAEEE",
-    "NSCTCE",
-    "TTTEOM",
-    "NRLHOD",
-    "LETPIC",
-    "NOLDHR",
-    "GUEEMA",
-    "CIEPTS",
-    "CIIETL",
-];
+export type BoardSizeType = "big" | "superbig";
+export const BOARD_SIZES = {
+    big: 5,
+    superbig: 6,
+};
 
-export function getBoardLayout(): string[] {
-    const shuffled = DICE.map((d) => ({ sort: Math.random(), value: d })) // Addd sort key
+const DIE_SIZE = 6;
+
+const DICE = {
+    big: [
+        "RUGRWO",
+        "TITEII",
+        "USENSS",
+        "ONWUOT",
+        "IYPRRR",
+        "PSIRFY",
+        "HLRHDO",
+        "OUOTTO",
+        "HDDNTO",
+        "AEAEEE",
+        "FAIASR",
+        "NNENDA",
+        "KQXZBJ",
+        "FAYISR",
+        "ENGNMA",
+        "ARASAF",
+        "MEAEEE",
+        "NSCTCE",
+        "TTTEOM",
+        "NRLHOD",
+        "LETPIC",
+        "NOLDHR",
+        "GUEEMA",
+        "CIEPTS",
+        "CIIETL",
+    ],
+    superbig: [
+        "ESUNSS",
+        "VWOGRR",
+        "TTOMET",
+        "CPITES",
+        "DNHDTO",
+        "LORHND",
+        "UNIOAE",
+        "CUNYGF",
+        "ROHSTP",
+        "MGNAEN",
+        "GUMEAE",
+        "WUOTON",
+        "SRVTHI",
+        "ITECIT",
+        "OOTTUO",
+        "HDNHWO",
+        "ENANND",
+        "ESLITI",
+        "CTNECS",
+        "AEEAEE",
+        "SYARIF",
+        "OBAEID",
+        "QXJZWK",
+        "AAOOEE",
+        "FARASA",
+        "ZXBBJK",
+        "EEMEEA",
+        "LROHDH",
+        "PYRYSI",
+        "RIASAF",
+        "IMEALN",
+        "ESLHIR",
+        "LPITSE",
+        "DNLCDN",
+        "OEI   ",
+        "HETHERINANQU",
+    ],
+};
+
+export function getBoardLayout(size: "big" | "superbig"): string[] {
+    const shuffled = DICE[size]
+        .map((d) => ({ sort: Math.random(), value: d })) // Addd sort key
         .sort((a, b) => a.sort - b.sort) // Sort by key
-        .map((d) => d.value) // Remove sort key
-        .map((d) => d[Math.floor(Math.random() * d.length)]); // Get random letter from each
-    return shuffled;
+        .map((d) => d.value); // Remove sort key
+    const rolled = shuffled.map((d) => {
+        const sideWidth = d.length / DIE_SIZE;
+        const randomSideNumber =
+            Math.floor(Math.random() * DIE_SIZE) * sideWidth;
+        return d.slice(randomSideNumber, randomSideNumber + sideWidth);
+    }); // Get random letter from each
+    return rolled;
 }
 
 interface RowColType {
@@ -47,14 +101,20 @@ export interface WordPathType {
     path: number[];
 }
 
-function rowColToNum({ row, col }: RowColType): number {
-    return row * 5 + col;
+function rowColToNum(
+    { row, col }: RowColType,
+    boardSize: BoardSizeType
+): number {
+    return row * BOARD_SIZES[boardSize] + col;
 }
 
-export function findValidWords(boardLayout: string[]): WordPathType[] {
+export function findValidWords(
+    boardLayout: string[],
+    boardSize: BoardSizeType
+): WordPathType[] {
     return dictionary
         .map((word) => {
-            const path = findWord(word, boardLayout, []);
+            const path = findWord(word, boardLayout, boardSize, []);
             return { word, path };
         })
         .filter((fr) => fr.path !== false)
@@ -67,17 +127,21 @@ export function findValidWords(boardLayout: string[]): WordPathType[] {
 export function findWord(
     word: string,
     boardLayout: string[],
+    boardSize: BoardSizeType,
     path: RowColType[]
 ): number[] | false {
+    const sideSize = BOARD_SIZES[boardSize];
     if (!word.length) {
         return false;
     }
     if (!path.length) {
         // We're just starting!
         const DQdWord = word.replace("QU", "Q");
-        for (let row = 0; row < 5; row++) {
-            for (let col = 0; col < 5; col++) {
-                const result = findWord(DQdWord, boardLayout, [{ row, col }]);
+        for (let row = 0; row < sideSize; row++) {
+            for (let col = 0; col < sideSize; col++) {
+                const result = findWord(DQdWord, boardLayout, boardSize, [
+                    { row, col },
+                ]);
                 if (result) {
                     return result;
                 }
@@ -87,7 +151,9 @@ export function findWord(
     } else {
         // Checking the letters so far...
         // Make a path-word out of the path coords
-        const pathWord = path.map((p) => boardLayout[rowColToNum(p)]).join("");
+        const pathWord = path
+            .map((p) => boardLayout[rowColToNum(p, boardSize)])
+            .join("");
         // Make an abbreviated word out of the needle, but x characters long (based on length of path)
         const wordAbbrev = word.substring(0, pathWord.length);
 
@@ -97,7 +163,7 @@ export function findWord(
         }
         // They match, is it an entire match?
         if (pathWord === word) {
-            const numPath = path.map((p) => rowColToNum(p));
+            const numPath = path.map((p) => rowColToNum(p, boardSize));
             return numPath;
         }
         // They match, but it isn't the entire word yet. Search l, r, u, d
@@ -108,7 +174,7 @@ export function findWord(
         const { row, col } = last;
         if (row > 0 && !path.some((p) => p.row === row - 1 && p.col === col)) {
             // Search row - 1
-            const result = findWord(word, boardLayout, [
+            const result = findWord(word, boardLayout, boardSize, [
                 ...path,
                 { row: row - 1, col },
             ]);
@@ -118,7 +184,7 @@ export function findWord(
         }
         if (row < 4 && !path.some((p) => p.row === row + 1 && p.col === col)) {
             // Search row + 1
-            const result = findWord(word, boardLayout, [
+            const result = findWord(word, boardLayout, boardSize, [
                 ...path,
                 { row: row + 1, col },
             ]);
@@ -128,7 +194,7 @@ export function findWord(
         }
         if (col > 0 && !path.some((p) => p.row === row && p.col === col - 1)) {
             // Search col - 1
-            const result = findWord(word, boardLayout, [
+            const result = findWord(word, boardLayout, boardSize, [
                 ...path,
                 { col: col - 1, row },
             ]);
@@ -138,7 +204,7 @@ export function findWord(
         }
         if (col < 4 && !path.some((p) => p.row === row && p.col === col + 1)) {
             // Search col + 1
-            const result = findWord(word, boardLayout, [
+            const result = findWord(word, boardLayout, boardSize, [
                 ...path,
                 { col: col + 1, row },
             ]);

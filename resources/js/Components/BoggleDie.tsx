@@ -6,17 +6,25 @@ interface PropType {
 }
 
 export default function BoggleDie(props: PropType) {
-    const bgColor = props.highlighted ? "bg-green-400" : "bg-white";
+    const { letter, highlighted } = props;
+    const bgColor = highlighted ? "bg-green-400" : "bg-white";
+    let displayedLetter: string;
+    if (letter === "Q") {
+        displayedLetter = "Qu";
+    } else if (letter === " ") {
+        displayedLetter = "\u{2B1B}";
+    } else if (letter.length === 2) {
+        displayedLetter = `${letter.charAt(0).toUpperCase()}${letter
+            .charAt(1)
+            .toLowerCase()}`;
+    } else {
+        displayedLetter = letter;
+    }
     return (
         <div
             className={`flex items-center justify-center w-16 h-16 ${bgColor} border-2 border-black rounded-md`}
         >
-            <div className="text-2xl text-black ">
-                {props.letter}
-                <span className="text-sm">
-                    {props.letter === "Q" ? "u" : ""}
-                </span>
-            </div>
+            <div className="text-2xl text-black ">{displayedLetter}</div>
         </div>
     );
 }
