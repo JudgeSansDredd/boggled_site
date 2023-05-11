@@ -86,10 +86,10 @@ export default function Home() {
                 <div className="text-2xl text-blue-700">Boggled</div>
                 <select onChange={handleBoardSizeChange}>
                     <option value="big">
-                        {BOARD_SIZES["big"]} x {BOARD_SIZES["big"]}
+                        {BOARD_SIZES.big} x {BOARD_SIZES.big}
                     </option>
                     <option value="superbig">
-                        {BOARD_SIZES["superbig"]} x {BOARD_SIZES["superbig"]}
+                        {BOARD_SIZES.superbig} x {BOARD_SIZES.superbig}
                     </option>
                 </select>
                 <div className="flex">
