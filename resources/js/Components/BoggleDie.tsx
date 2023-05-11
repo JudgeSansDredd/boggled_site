@@ -11,8 +11,8 @@ export default function BoggleDie(props: PropType) {
     let displayedLetter: string;
     if (letter === "Q") {
         displayedLetter = "Qu";
-    } else if (letter === " ") {
-        displayedLetter = "\u{2B1B}";
+    } else if (letter === ".") {
+        displayedLetter = "⬛️";
     } else if (letter.length === 2) {
         displayedLetter = `${letter.charAt(0).toUpperCase()}${letter
             .charAt(1)

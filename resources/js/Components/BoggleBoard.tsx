@@ -1,5 +1,5 @@
 import React from "react";
-import { BoardSizeType, BOARD_SIZES } from "../Utils/utils";
+import { BOARD_SIZES, BoardSizeType } from "../Utils/utils";
 import BoggleDie from "./BoggleDie";
 
 interface PropType {

@@ -1,5 +1,4 @@
 import axios from "axios";
-import { dictionary } from "./dictionary_filtered";
 
 export type BoardSizeType = "big" | "superbig";
 export const BOARD_SIZES = {
@@ -72,7 +71,7 @@ const DICE = {
         "ESLHIR",
         "LPITSE",
         "DNLCDN",
-        "OEI   ",
+        "OEI...",
         "HETHERINANQU",
     ],
 };
@@ -108,26 +107,11 @@ function rowColToNum(
     return row * BOARD_SIZES[boardSize] + col;
 }
 
-export function findValidWords(
-    boardLayout: string[],
-    boardSize: BoardSizeType
-): WordPathType[] {
-    return dictionary
-        .map((word) => {
-            const path = findWord(word, boardLayout, boardSize, []);
-            return { word, path };
-        })
-        .filter((fr) => fr.path !== false)
-        .sort((a, b) => b.word.length - a.word.length) as {
-        word: string;
-        path: number[];
-    }[];
-}
-
 export function findWord(
     word: string,
     boardLayout: string[],
     boardSize: BoardSizeType,
+    allowDiagonal: boolean,
     path: RowColType[]
 ): number[] | false {
     const sideSize = BOARD_SIZES[boardSize];
@@ -136,12 +120,15 @@ export function findWord(
     }
     if (!path.length) {
         // We're just starting!
-        const DQdWord = word.replace("QU", "Q");
         for (let row = 0; row < sideSize; row++) {
             for (let col = 0; col < sideSize; col++) {
-                const result = findWord(DQdWord, boardLayout, boardSize, [
-                    { row, col },
-                ]);
+                const result = findWord(
+                    word,
+                    boardLayout,
+                    boardSize,
+                    allowDiagonal,
+                    [{ row, col }]
+                );
                 if (result) {
                     return result;
                 }
@@ -172,42 +159,136 @@ export function findWord(
             return false;
         }
         const { row, col } = last;
-        if (row > 0 && !path.some((p) => p.row === row - 1 && p.col === col)) {
-            // Search row - 1
-            const result = findWord(word, boardLayout, boardSize, [
-                ...path,
-                { row: row - 1, col },
-            ]);
+        const rowUp = row - 1;
+        const rowDown = row + 1;
+        const colLeft = col - 1;
+        const colRight = col + 1;
+        const roomUp = rowUp >= 0;
+        const roomDown = rowUp < BOARD_SIZES[boardSize];
+        const roomLeft = colLeft >= 0;
+        const roomRight = colRight < BOARD_SIZES[boardSize];
+
+        if (roomUp) {
+            if (!path.some((p) => p.row === rowUp && p.col === col)) {
+                // Look up
+                const result = findWord(
+                    word,
+                    boardLayout,
+                    boardSize,
+                    allowDiagonal,
+                    [...path, { row: rowUp, col }]
+                );
+                if (result) {
+                    return result;
+                }
+            }
+            if (allowDiagonal) {
+                if (
+                    roomLeft &&
+                    !path.some((p) => p.row === rowUp && p.col === colLeft)
+                ) {
+                    // Look up and left
+                    const result = findWord(
+                        word,
+                        boardLayout,
+                        boardSize,
+                        allowDiagonal,
+                        [...path, { row: rowUp, col: colLeft }]
+                    );
+                    if (result) {
+                        return result;
+                    }
+                }
+                if (
+                    roomRight &&
+                    !path.some((p) => p.row === rowUp && p.col === colRight)
+                ) {
+                    // Look up and right
+                    const result = findWord(
+                        word,
+                        boardLayout,
+                        boardSize,
+                        allowDiagonal,
+                        [...path, { row: rowUp, col: colRight }]
+                    );
+                    if (result) {
+                        return result;
+                    }
+                }
+            }
+        }
+        if (roomDown) {
+            if (!path.some((p) => p.row === rowDown && p.col === col)) {
+                // Look down
+                const result = findWord(
+                    word,
+                    boardLayout,
+                    boardSize,
+                    allowDiagonal,
+                    [...path, { row: rowDown, col }]
+                );
+                if (result) {
+                    return result;
+                }
+            }
+            if (
+                roomLeft &&
+                !path.some((p) => p.row === rowDown && p.col === colLeft)
+            ) {
+                // Look down and left
+                const result = findWord(
+                    word,
+                    boardLayout,
+                    boardSize,
+                    allowDiagonal,
+                    [...path, { row: rowDown, col: colLeft }]
+                );
+                if (result) {
+                    return result;
+                }
+            }
+            if (
+                roomRight &&
+                !path.some((p) => p.row === rowDown && p.col === colRight)
+            ) {
+                // Look down and right
+                const result = findWord(
+                    word,
+                    boardLayout,
+                    boardSize,
+                    allowDiagonal,
+                    [...path, { row: rowDown, col: colRight }]
+                );
+                if (result) {
+                    return result;
+                }
+            }
+        }
+        if (roomLeft && !path.some((p) => p.row === row && p.col === colLeft)) {
+            // Look left
+            const result = findWord(
+                word,
+                boardLayout,
+                boardSize,
+                allowDiagonal,
+                [...path, { row, col: colLeft }]
+            );
             if (result) {
                 return result;
             }
         }
-        if (row < 4 && !path.some((p) => p.row === row + 1 && p.col === col)) {
-            // Search row + 1
-            const result = findWord(word, boardLayout, boardSize, [
-                ...path,
-                { row: row + 1, col },
-            ]);
-            if (result) {
-                return result;
-            }
-        }
-        if (col > 0 && !path.some((p) => p.row === row && p.col === col - 1)) {
-            // Search col - 1
-            const result = findWord(word, boardLayout, boardSize, [
-                ...path,
-                { col: col - 1, row },
-            ]);
-            if (result) {
-                return result;
-            }
-        }
-        if (col < 4 && !path.some((p) => p.row === row && p.col === col + 1)) {
-            // Search col + 1
-            const result = findWord(word, boardLayout, boardSize, [
-                ...path,
-                { col: col + 1, row },
-            ]);
+        if (
+            roomRight &&
+            !path.some((p) => p.row === row && p.col === colRight)
+        ) {
+            // Look right
+            const result = findWord(
+                word,
+                boardLayout,
+                boardSize,
+                allowDiagonal,
+                [...path, { row, col: colRight }]
+            );
             if (result) {
                 return result;
             }
